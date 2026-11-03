@@ -1,0 +1,164 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Trajetória de tensões · Ensaios triaxiais</title>
+<style>
+:root{--bg:#eef2f5;--pn:#fff;--ink:#14232f;--mu:#5b6b78;--ln:#d5dde3;--ac:#0b6e8a;--gr:#e3eaef;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a22;--pn:#16242e;--ink:#e6eef3;--mu:#93a5b3;--ln:#2a3b47;--ac:#4fc3e0;--gr:#22343f}}
+:root[data-theme="dark"]{--bg:#0f1a22;--pn:#16242e;--ink:#e6eef3;--mu:#93a5b3;--ln:#2a3b47;--ac:#4fc3e0;--gr:#22343f}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:20px 24px 4px}h1{font-size:1.5rem;margin:0;letter-spacing:-.01em}header p{margin:2px 0 0;color:var(--mu);max-width:70ch}
+main{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:16px;padding:16px 24px 28px;align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:12px}header{padding:16px 12px 0}}
+.pn{background:var(--pn);border:1px solid var(--ln);border-radius:10px;padding:14px;margin-bottom:12px}
+h2{font-size:.95rem;margin:0 0 8px}.mu{color:var(--mu);font-size:.85rem}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+button,.seg label{font:inherit;font-size:.88rem;border:1px solid var(--ln);background:var(--pn);color:var(--ink);padding:6px 11px;border-radius:7px;cursor:pointer}
+button:hover,.seg label:hover{border-color:var(--ac)}
+button:focus-visible,input:focus-visible,.seg input:focus-visible+span{outline:2px solid var(--ac);outline-offset:1px}
+.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.on.sw{color:#fff}.seg input{position:absolute;opacity:0;pointer-events:none}.seg label{position:relative}
+.seg label:has(input:checked){background:var(--ac);border-color:var(--ac);color:#fff}.seg label:has(input:focus-visible){outline:2px solid var(--ac);outline-offset:1px}
+table{border-collapse:collapse;width:100%}th{font-weight:600;font-size:.8rem;color:var(--mu);text-align:left;padding:2px 3px}
+td{padding:2px}td input{width:100%;min-width:0;font:inherit;font-size:.88rem;padding:5px 6px;border:1px solid var(--ln);border-radius:6px;background:var(--bg);color:var(--ink);font-variant-numeric:tabular-nums}
+.x{padding:2px 7px;border:0;color:var(--mu)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--ln);margin-bottom:10px;flex-wrap:wrap}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:0;padding:8px 12px;background:none}
+.tabs button.on{background:none;color:var(--ac);border-bottom-color:var(--ac);font-weight:600}
+.tools{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:8px;font-size:.88rem}
+.tools label{display:flex;gap:5px;align-items:center}
+#view svg{cursor:grab;touch-action:none}svg{width:100%;height:auto;display:block}.gl{stroke:var(--gr);stroke-width:1}.ax{stroke:var(--mu);stroke-width:1.2}
+.tk{fill:var(--mu);font-size:11px}.al{fill:var(--ink);font-size:12.5px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:10px}
+.card{border:1px solid var(--ln);border-radius:8px;padding:10px;font-size:.88rem;background:var(--bg)}
+.lg{display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem;color:var(--mu);margin-top:6px}.lg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:5px 8px;border-radius:6px;font-size:.78rem;display:none;z-index:9;white-space:pre}
+.ol td,.ol th{padding:6px 8px;border-bottom:1px solid var(--ln);text-align:right}.ol th:first-child,.ol td:first-child{text-align:left}
+.eq{font-family:Georgia,serif;font-size:1.1rem;padding:8px 0}.note{font-size:.85rem;color:var(--mu);margin:8px 0 0}
+input[type=text].sm{width:70px;font:inherit;padding:4px 6px;border:1px solid var(--ln);border-radius:6px;background:var(--bg);color:var(--ink)}
+</style></head><body>
+<header><h1>Trajetória de tensões em ensaios triaxiais</h1><p>Entre com os resultados dos ensaios e veja a trajetória (p, q) de Lambe, a linha K<sub>f</sub>, os círculos de Mohr e a análise de Olson &amp; Mattson (2008). Unidades em kPa.</p></header>
+<main>
+<aside>
+ <div class="pn"><h2>Exemplos prontos (3 corpos de prova)</h2><div class="seg" id="ex"></div><p class="mu" style="margin:8px 0 0">Cada botão carrega um caso típico; “Plotar todos juntos” coloca os 5 caminhos no mesmo gráfico, partindo de σ₀ = 200 kPa (Kf desligada, pois os ensaios são de naturezas diferentes).</p></div>
+ <div class="pn"><h2>Tipo de ensaio</h2><div class="seg" id="tipo"></div><p class="mu" id="tipoN" style="margin:8px 0 0"></p></div>
+ <div class="pn"><h2>Como você vai informar os dados?</h2><div class="seg" id="ent"></div></div>
+ <div class="pn"><h2>Corpos de prova</h2><div class="seg" id="cps" style="margin-bottom:10px"></div><div style="overflow-x:auto"><table id="tb"></table></div>
+  <div class="seg" style="margin-top:8px"><button id="addr">+ Linha</button><button id="clr">Limpar tabela</button></div><p class="mu" style="margin:8px 0 0">Dica: cole direto do Excel (Ctrl+V) em qualquer célula. Aceita vírgula decimal.</p></div>
+</aside>
+<section class="pn">
+ <div class="tabs" id="tabs"></div>
+ <div class="tools" id="tools"></div>
+ <div id="view"></div><div class="cards" id="cards"></div>
+</section>
+</main><div id="tip"></div>
+<script>
+const $=s=>document.querySelector(s),COL=['#0b6e8a','#f08c00','#7c3aed','#15803d','#e0218a','#6b4423'];
+const D=Math.PI/180,num=v=>parseFloat(String(v).replace(',','.')),fmt=v=>Number.isFinite(v)?String(+v.toFixed(2)).replace('.',','):'–';
+let G=null,drag=null,S={z:{},yv:'q',tipo:'CIU',ent:'s13',vis:'ambas',tab:'path',cur:0,kf:true,csl:true,phics:'',sp:[]};
+const EX={CIU:'CIU – compressão axial não drenada',AC:'Compressão axial (drenada)',AE:'Extensão axial (drenada)',LC:'Compressão lateral (drenada)',LE:'Extensão lateral (drenada)'};
+const TN={CIU:'Adensado isotropicamente, cisalhado não drenado, com medida de poropressão (u). Permite TTT e TTE.',CID:'Adensado e cisalhado drenado: u = 0, tensões totais = efetivas.',UU:'Não adensado, não drenado: só tensões totais (φu e c<sub>u</sub>).'};
+function gen(k,s0,ph){const s=Math.sin(ph*D),rows=[];for(let i=0;i<=10;i++){const e=i*1.4,h=(1-Math.exp(-e/3))/(1-Math.exp(-14/3));let a,b,u=0;
+ if(k==='AC'){const q=s0*s/(1-s)*h;a=s0+2*q;b=s0}
+ if(k==='AE'){const q=s0*s/(1+s)*h;a=s0-2*q;b=s0}
+ if(k==='LC'){const q=s0*s/(1-s)*h;a=s0;b=s0+2*q}
+ if(k==='LE'){const q=s0*s/(1+s)*h;a=s0;b=s0-2*q}
+ if(k==='CIU'){const pf=.55*s0,q=pf*s*h,pe=s0-(s0-pf)*Math.pow(h,.8);a=s0+2*q;b=s0;u=s0+q-pe}
+ rows.push({e:e.toFixed(1),a:a.toFixed(1),b:b.toFixed(1),u:u.toFixed(1)})}return rows}
+function load(k){S.tipo=k==='CIU'?'CIU':'CID';S.ent='s13';S.cur=0;S.phics='';S.z={};S.kf=true;S.csl=true;S.vis='ambas';S.sp=[100,200,300].map((s0,i)=>({n:'CP-'+(i+1)+' (σ₀ '+s0+')',rows:gen(k,s0,32)}));render()}
+function loadAll(){S.tipo='CIU';S.ent='s13';S.vis='ambas';S.cur=0;S.phics='';S.z={};S.tab='path';S.kf=false;S.csl=false;
+ S.sp=Object.entries(EX).map(([k,t])=>({n:t.replace(' (drenada)','').replace('CIU – compressão axial não drenada','CIU (não drenada)'),rows:gen(k,200,32)}));render()}
+function calc(sp){return sp.rows.map(r=>({e:r.e,a:num(r.a),b:num(r.b),u:S.tipo==='CIU'?(num(r.u)||0):0})).filter(r=>isFinite(r.a)&&isFinite(r.b)).map(r=>{let s1,s3,p,q;if(S.ent==='s13'){s1=r.a;s3=r.b;p=(s1+s3)/2;q=(s1-s3)/2}else{p=r.a;q=r.b;s1=p+q;s3=p-q}return{e:r.e,u:r.u,p,q,pe:p-r.u,s1,s3,s1e:s1-r.u,s3e:s3-r.u}})}
+const kinds=()=>S.tipo==='CIU'?(S.vis==='ambas'?['t','e']:[S.vis==='total'?'t':'e']):S.tipo==='CID'?['e']:['t'];
+const kn=k=>k==='t'?(S.tipo==='UU'?'Tensões totais (TTT)':'Totais (TTT)'):(S.tipo==='CID'?'Efetivas = totais':'Efetivas (TTE)');
+const px=(r,k)=>k==='t'?r.p:r.pe;
+function fail(k){return S.sp.map(sp=>{const R=calc(sp);if(!R.length)return null;let m=R[0];R.forEach(r=>{if(Math.abs(r.q)>Math.abs(m.q))m=r});return{p:px(m,k),q:Math.abs(m.q),r:m}}).map((f,i)=>f&&{...f,i}).filter(Boolean)}
+function fit(P){const n=P.length;if(!n)return null;const o=()=>{const m=P[0].q/P[0].p;return{m,a:0,n,R2:NaN}};if(n===1)return Object.assign(o(),{ph:Math.asin(Math.min(P[0].q/P[0].p,.999))/D,c:0});
+ const sx=P.reduce((s,p)=>s+p.p,0),sy=P.reduce((s,p)=>s+p.q,0),sxy=P.reduce((s,p)=>s+p.p*p.q,0),sxx=P.reduce((s,p)=>s+p.p*p.p,0),d=n*sxx-sx*sx;if(Math.abs(d)<1e-9)return Object.assign(o(),{ph:0,c:0});
+ const m=(n*sxy-sx*sy)/d,a=(sy-m*sx)/n,my=sy/n,st=P.reduce((s,p)=>s+(p.q-my)**2,0),sr=P.reduce((s,p)=>s+(p.q-a-m*p.p)**2,0);const ph=Math.asin(Math.max(-.999,Math.min(.999,m)));return{m,a,n,R2:st?1-sr/st:1,ph:ph/D,c:a/Math.cos(ph)}}
+function chart(pts,xl,yl,draw,eq){const W=760,H=500,ml=60,mr=18,mt=14,mb=50,pw=W-ml-mr,ph=H-mt-mb;
+ const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);let x0=Math.min(0,...xs),x1=Math.max(1,...xs),y0=Math.min(0,...ys),y1=Math.max(1,...ys);
+ const dx=(x1-x0)*.06,dy=(y1-y0)*.08;x1+=dx;y1+=dy;if(y0<0)y0-=dy;if(x0<0)x0-=dx;
+ let kx=pw/(x1-x0),ky=ph/(y1-y0);if(eq!==false)kx=ky=Math.min(kx,ky);x1=x0+pw/kx;y1=y0+ph/ky;const z=S.z[S.tab];if(z){x0=z.x0;y0=z.y0;kx=z.kx;ky=z.ky;x1=x0+pw/kx;y1=y0+ph/ky}
+ G={x0,y0,y1,kx,ky,ml,mt,W,H};const X=v=>ml+(v-x0)*kx,Y=v=>mt+(y1-v)*ky;
+ const st=n=>{const r=n/6,p=Math.pow(10,Math.floor(Math.log10(r))),f=r/p;return(f<1.5?1:f<3.5?2:f<7.5?5:10)*p},sx=st(x1-x0),sy=st(y1-y0);let g='';
+ for(let i=Math.ceil(x0/sx);i*sx<=x1;i++){const v=i*sx;g+=`<line class="gl" x1="${X(v)}" x2="${X(v)}" y1="${mt}" y2="${H-mb}"/><text class="tk" x="${X(v)}" y="${H-mb+16}" text-anchor="middle">${+v.toFixed(6)}</text>`}
+ for(let i=Math.ceil(y0/sy);i*sy<=y1;i++){const v=i*sy;g+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="tk" x="${ml-6}" y="${Y(v)+4}" text-anchor="end">${+v.toFixed(6)}</text>`}
+ return`<svg viewBox="0 0 ${W} ${H}" role="img"><clipPath id="cp"><rect x="${ml}" y="${mt}" width="${pw}" height="${ph}"/></clipPath>${g}<line class="ax" x1="${X(0)}" x2="${X(0)}" y1="${mt}" y2="${H-mb}"/><line class="ax" x1="${ml}" x2="${W-mr}" y1="${Y(0)}" y2="${Y(0)}"/><g clip-path="url(#cp)">${draw(X,Y,{xa:x0,xb:x1,ya:y0,yb:y1})}</g><text class="al" x="${ml+pw/2}" y="${H-8}" text-anchor="middle">${xl}</text><text class="al" transform="translate(15 ${mt+ph/2}) rotate(-90)" text-anchor="middle">${yl}</text></svg>`}
+const lbl=(x,y,t,c,a)=>`<text x="${x}" y="${y}" ${a?'text-anchor="'+a+'"':''} fill="${c}" font-size="12" font-weight="600" paint-order="stroke" stroke="var(--pn)" stroke-width="3">${t}</text>`;
+function cslPhi(){const v=num(S.phics);if(isFinite(v))return v;const f=fit(fail('e'));return f?f.ph:null}
+function dPath(){const K=kinds(),L=[];let pts=[];
+ S.sp.forEach((sp,i)=>K.forEach(k=>calc(sp).forEach(r=>pts.push([px(r,k),r.q]))));
+ const xd=Math.max(...pts.map(p=>p[0]),1),LB=(B,o)=>Math.min(xd*1.03,B.xa+(B.xb-B.xa)*.92)-(o||0)*(B.xb-B.xa);
+ const F={};K.forEach(k=>F[k]=fit(fail(k)));K.forEach(k=>fail(k).forEach(f=>pts.push([f.p,f.q])));
+ const ps=cslPhi();if(S.csl&&K.includes('e')&&ps!=null)pts.push([Math.max(...pts.map(p=>p[0]))*.9,Math.max(...pts.map(p=>p[0]))*.9*Math.sin(ps*D)]);
+ if(S.kf)K.forEach(k=>{const f=F[k];if(f){const xm=Math.max(...pts.map(p=>p[0]));pts.push([xm,f.a+f.m*xm])}});
+ return chart(pts,K.length>1?'p, p′ (kPa)':K[0]==='t'?'p (kPa)':'p′ (kPa)','q (kPa)',(X,Y,B)=>{let s='';
+  if(S.kf)K.forEach(k=>{const f=F[k];if(!f)return;const c=k==='t'?'#64748b':'var(--ink)';s+=`<line x1="${X(0)}" y1="${Y(f.a)}" x2="${X(B.xb)}" y2="${Y(f.a+f.m*B.xb)}" stroke="${c}" stroke-width="2" stroke-dasharray="${k==='t'?'3 4':'0'}"/>`+lbl(X(LB(B)),Y(f.a+f.m*LB(B))-9,'Kf'+(k==='e'&&S.tipo!=='CID'?'′':''),c,'end')});
+  if(S.csl&&K.includes('e')&&ps!=null)s+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(B.xb)}" y2="${Y(B.xb*Math.sin(ps*D))}" stroke="#d97706" stroke-width="2" stroke-dasharray="9 4 2 4"/>`+lbl(X(LB(B,.16)),Y(LB(B,.16)*Math.sin(ps*D))-9,'LEC (φcs = '+fmt(ps)+'°)','#d97706','end');
+  S.sp.forEach((sp,i)=>K.forEach(k=>{const R=calc(sp);if(!R.length)return;const c=COL[i%6];
+   s+=`<polyline fill="none" stroke="${c}" stroke-width="2.2" ${k==='t'&&K.length>1?'stroke-dasharray="6 4"':''} points="${R.map(r=>X(px(r,k))+','+Y(r.q)).join(' ')}"/>`;
+   R.forEach((r,j)=>s+=`<circle cx="${X(px(r,k))}" cy="${Y(r.q)}" r="3.4" fill="${c}" data-t="${sp.n}\nε = ${r.e||'–'} %\np${k==='e'?'′':''} = ${fmt(px(r,k))}  q = ${fmt(r.q)}\nσ1${k==='e'?'′':''} = ${fmt(k==='e'?r.s1e:r.s1)}  σ3${k==='e'?'′':''} = ${fmt(k==='e'?r.s3e:r.s3)}\nu = ${fmt(r.u)}"/>`)}));
+  K.forEach(k=>fail(k).forEach(f=>s+=`<circle cx="${X(f.p)}" cy="${Y(Math.sign(f.r.q||1)*f.q)}" r="8" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`));return s})}
+function dMohr(){const K=kinds(),pts=[];K.forEach(k=>fail(k).forEach(f=>pts.push([f.p-f.q,0],[f.p+f.q,f.q])));if(!pts.length)return'';
+ const xd=Math.max(...pts.map(p=>p[0]),1),LB=(B,o)=>Math.min(xd*1.03,B.xa+(B.xb-B.xa)*.92)-(o||0)*(B.xb-B.xa);const F={};K.forEach(k=>F[k]=fit(fail(k)));const ps=cslPhi();
+ return chart(pts.concat(S.kf?K.map(k=>[0,F[k]?F[k].c:0]):[]),K.length>1?'σ, σ′ (kPa)':K[0]==='t'?'σ (kPa)':'σ′ (kPa)','τ (kPa)',(X,Y,B)=>{let s='';
+  K.forEach(k=>fail(k).forEach(f=>{const c=COL[f.i%6];s+=`<path d="M${X(f.p-f.q)} ${Y(0)} A${f.q*(X(1)-X(0))} ${f.q*(X(1)-X(0))} 0 0 1 ${X(f.p+f.q)} ${Y(0)}" fill="${c}22" stroke="${c}" stroke-width="2" ${k==='t'&&K.length>1?'stroke-dasharray="6 4"':''} data-t="${S.sp[f.i].n} (${k==='t'?'total':'efetiva'})\nσ1 = ${fmt(f.p+f.q)}  σ3 = ${fmt(f.p-f.q)}\nτmáx = ${fmt(f.q)}"/>`}));
+  if(S.kf)K.forEach(k=>{const f=F[k];if(!f)return;const t=Math.tan(f.ph*D),c=k==='t'?'#64748b':'var(--ink)';s+=`<line x1="${X(0)}" y1="${Y(f.c)}" x2="${X(B.xb)}" y2="${Y(f.c+B.xb*t)}" stroke="${c}" stroke-width="2" stroke-dasharray="${k==='t'?'3 4':'0'}"/>`+lbl(X(LB(B)),Y(f.c+LB(B)*t)-9,'Envoltória MC ('+(k==='t'?'tot.':'ef.')+')',c,'end')});
+  if(S.csl&&K.includes('e')&&ps!=null)s+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(B.xb)}" y2="${Y(B.xb*Math.tan(ps*D))}" stroke="#d97706" stroke-width="2" stroke-dasharray="9 4 2 4"/>`+lbl(X(LB(B,.3)),Y(LB(B,.3)*Math.tan(ps*D))-9,'LEC','#d97706','end');return s})}
+function dEps(){const yu=S.yv==='u'&&S.tipo==='CIU',v=r=>yu?r.u:r.q,pts=[],ok=sp=>calc(sp).filter(r=>isFinite(num(r.e)));
+ S.sp.forEach(sp=>ok(sp).forEach(r=>pts.push([num(r.e),v(r)])));if(!pts.length)return'<p class="mu">Preencha a coluna ε (%) da tabela para ver a curva.</p>';
+ return chart(pts,'ε axial (%)',yu?'u (kPa)':'q (kPa)',(X,Y)=>{let s='';S.sp.forEach((sp,i)=>{const R=ok(sp);if(!R.length)return;const c=COL[i%6];
+  s+=`<polyline fill="none" stroke="${c}" stroke-width="2.2" points="${R.map(r=>X(num(r.e))+','+Y(v(r))).join(' ')}"/>`;
+  R.forEach(r=>s+=`<circle cx="${X(num(r.e))}" cy="${Y(v(r))}" r="3.4" fill="${c}" data-t="${sp.n}\nε = ${r.e} %\nq = ${fmt(r.q)}  u = ${fmt(r.u)}\np${S.tipo==='CIU'?'′':''} = ${fmt(r.pe)}"/>`);
+  if(!yu){let m=R[0];R.forEach(r=>{if(Math.abs(r.q)>Math.abs(m.q))m=r});s+=`<circle cx="${X(num(m.e))}" cy="${Y(m.q)}" r="8" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`}});return s},false)}
+function dOlson(){const rows=S.sp.map(sp=>{const R=calc(sp);if(!R.length)return null;const sc=R[0].s3e,su=Math.max(...R.map(r=>Math.abs(r.q))),sr=Math.abs(R[R.length-1].q);return{n:sp.n,sc,su,sr}}).filter(Boolean);
+ const ok=S.tipo!=='CID',m=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:NaN;
+ return`<div class="eq">S<sub>u</sub> / σ′<sub>v</sub> = (σ₁ − σ₃) / (2σ₃)</div><p class="mu" style="margin:0 0 8px">Resistência não drenada normalizada (Olson &amp; Mattson, 2008): <b>S<sub>u</sub></b> = q = (σ₁ − σ₃)/2 e σ₃ = tensão confinante efetiva de adensamento (σ′<sub>3c</sub> = σ₃ − u₀, tomada na primeira linha de cada ensaio).</p>
+ ${ok?'':'<p class="note" style="color:#c2410c">Esta análise vale para ensaios não drenados (CIU ou UU). No CID a razão é apenas ilustrativa.</p>'}
+ <div style="overflow-x:auto"><table class="ol"><tr><th>Corpo de prova</th><th>σ′₃c</th><th>S<sub>u</sub> (pico)</th><th>S<sub>u</sub>/σ′₃c</th><th>S<sub>u</sub> (fim)</th><th>S<sub>u</sub>/σ′₃c (fim)</th></tr>${rows.map(r=>`<tr><td>${r.n}</td><td>${fmt(r.sc)}</td><td>${fmt(r.su)}</td><td><b>${fmt(r.su/r.sc)}</b></td><td>${fmt(r.sr)}</td><td>${fmt(r.sr/r.sc)}</td></tr>`).join('')}<tr><td><b>Média</b></td><td></td><td></td><td><b>${fmt(m(rows.map(r=>r.su/r.sc)))}</b></td><td></td><td><b>${fmt(m(rows.map(r=>r.sr/r.sc)))}</b></td></tr></table></div>
+ <p class="note">Valores em kPa. “Pico” é o maior q; “fim” é o q da última linha, útil para comparar o pico com a resistência em grandes deformações (susceptibilidade à perda de resistência). Se a razão for aproximadamente constante entre os ensaios, o solo segue comportamento normalizado (S<sub>u</sub> ∝ σ′<sub>v</sub>).</p>`}
+function cards(){if(S.tab==='olson'||S.tab==='eps')return'';const K=kinds();return K.map(k=>{const f=fit(fail(k));if(!f)return'';const u=S.tipo==='UU'?'u':'',pr=k==='e'&&S.tipo!=='CID'?'′':'';
+ return`<div class="card"><b>Linha Kf — ${kn(k)}</b><br>q = a + p${pr}·tan α<br>α = ${fmt(Math.asin(Math.min(f.m,1))/D)}° · a = ${fmt(f.a)} kPa<br><b>φ${u}${pr} = ${fmt(f.ph)}° · c${u}${pr} = ${fmt(f.c)} kPa</b><br><span class="mu">sen φ = tan α · c = a / cos φ · ${f.n} CP${f.n===1?' (c = 0 assumido)':' · R² = '+fmt(f.R2)}</span></div>`}).join('')+(S.tab==='path'?`<div class="card"><b>Como ler</b><br><span class="mu">Toda TTT é reta no carregamento de σ₃ constante; a TTE só é reta no ensaio drenado (u = 0). No ensaio não drenado a TTE é curva. Círculo vazado = ponto de ruptura (q máx).</span></div>`:'')}
+function toolsH(){const k=S.tipo==='CIU'&&S.tab!=='olson'&&S.tab!=='eps';return(k?`<span>Tensões:</span><div class="seg" id="vis">${[['ambas','Ambas'],['total','Totais'],['efetiva','Efetivas']].map(([v,t])=>`<label><input type="radio" name="vis" value="${v}" ${S.vis===v?'checked':''}><span>${t}</span></label>`).join('')}</div>`:'')+(S.tab==='eps'&&S.tipo==='CIU'?`<span>Eixo Y:</span><div class="seg">${[['q','q'],['u','u']].map(([v,t])=>`<label><input type="radio" name="yv" value="${v}" ${S.yv===v?'checked':''}><span>${t}</span></label>`).join('')}</div>`:'')+(S.tab==='olson'||S.tab==='eps'?'':`<label><input type="checkbox" id="kf" ${S.kf?'checked':''}>Linha K<sub>f</sub> / envoltória</label><label><input type="checkbox" id="csl" ${S.csl?'checked':''}>Estado crítico</label><label>φ<sub>cs</sub> (°) <input class="sm" type="text" inputmode="decimal" id="phics" placeholder="auto" value="${S.phics}"></label>`)+(S.tab==='olson'?'':`<span class="seg"><button id="rz">Resetar zoom</button><button id="xpng">Baixar PNG</button><button id="xsvg">Baixar SVG</button></span>`)}
+function renderTabs(){$('#tabs').innerHTML=[['path','Trajetória (p, q)'],['mohr','Círculos de Mohr'],['eps','Curva ε × q'],['olson','Olson & Mattson']].map(([v,t])=>`<button data-tab="${v}" class="${S.tab===v?'on':''}">${t}</button>`).join('');
+ $('#ex').innerHTML=Object.entries(EX).map(([k,t])=>`<button data-ex="${k}">${t}</button>`).join('')+'<button id="cmp" class="on" style="flex-basis:100%">Plotar todos juntos (comparar)</button>';
+ $('#tipo').innerHTML=['CIU','CID','UU'].map(t=>`<label><input type="radio" name="tp" value="${t}" ${S.tipo===t?'checked':''}><span>${t}</span></label>`).join('');$('#tipoN').innerHTML=TN[S.tipo];
+ $('#ent').innerHTML=[['s13','σ₁ e σ₃ (calcula p e q)'],['pq','p e q direto']].map(([v,t])=>`<label><input type="radio" name="en" value="${v}" ${S.ent===v?'checked':''}><span>${t}</span></label>`).join('');
+ $('#cps').innerHTML=S.sp.map((s,i)=>`<button data-cp="${i}" class="${S.cur===i?'on':''}" style="border-left:5px solid ${COL[i%6]}">${s.n}</button>`).join('')+'<button id="addcp">+ CP</button>'+(S.sp.length>1?'<button id="delcp">Remover</button>':'');
+ $('#tools').innerHTML=toolsH()}
+function renderTable(){const sp=S.sp[S.cur],h=S.ent==='s13'?['σ₁','σ₃']:['p','q'],cu=S.tipo==='CIU';
+ $('#tb').innerHTML=`<tr><th colspan="${cu?5:4}"><input class="sm" style="width:100%" id="nm" value="${sp.n}" aria-label="Nome do corpo de prova"></th></tr><tr><th>ε (%)</th><th>${h[0]}</th><th>${h[1]}</th>${cu?'<th>u</th>':''}<th></th></tr>`+sp.rows.map((r,i)=>`<tr>${['e','a','b'].concat(cu?['u']:[]).map((f,c)=>`<td><input type="text" inputmode="decimal" data-r="${i}" data-f="${f}" data-c="${c}" value="${r[f]??''}"></td>`).join('')}<td><button class="x" data-del="${i}" aria-label="Remover linha">×</button></td></tr>`).join('')}
+function draw(){$('#view').innerHTML=S.tab==='path'?dPath():S.tab==='mohr'?dMohr():S.tab==='eps'?dEps():dOlson();$('#cards').innerHTML=cards();
+ $('#view').insertAdjacentHTML('beforeend',S.tab!=='olson'?`<div class="lg">${S.tab==='eps'?'<span>círculo vazado = q máx · roda do mouse = zoom · arraste = mover</span>':'<span>roda do mouse = zoom · arraste = mover · duplo clique = resetar</span>'}${S.sp.map((s,i)=>`<span><i style="background:${COL[i%6]}"></i>${s.n}</span>`).join('')}${S.tipo==='CIU'&&S.vis==='ambas'?'<span>tracejado = totais · contínuo = efetivas</span>':''}</div>`:'')}
+function render(){renderTabs();renderTable();draw()}
+document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+ if(d.ex)return load(d.ex);if(d.tab){S.tab=d.tab;return render()}if(d.cp){S.cur=+d.cp;return render()}
+ if(d.del!==undefined){S.sp[S.cur].rows.splice(+d.del,1);renderTable();return draw()}
+ if(t.id==='cmp')return loadAll();
+ if(t.id==='rz'){S.z[S.tab]=null;draw()}
+ if(t.id==='xpng'||t.id==='xsvg')return exp(t.id==='xpng');
+ if(t.id==='addr'){S.sp[S.cur].rows.push({e:'',a:'',b:'',u:''});renderTable();$('#tb tr:last-child input')?.focus()}
+ if(t.id==='clr'){S.sp[S.cur].rows=[{e:'',a:'',b:'',u:''}];renderTable();draw()}
+ if(t.id==='addcp'){S.sp.push({n:'CP-'+(S.sp.length+1),rows:[{e:'',a:'',b:'',u:''}]});S.cur=S.sp.length-1;render()}
+ if(t.id==='delcp'){S.sp.splice(S.cur,1);S.cur=0;render()}});
+document.addEventListener('change',e=>{const t=e.target;if(t.name==='tp'){S.tipo=t.value;render()}if(t.name==='en'){S.ent=t.value;render()}if(t.name==='yv'){S.yv=t.value;S.z.eps=null;renderTabs();draw()}if(t.name==='vis'){S.vis=t.value;renderTabs();draw()}
+ if(t.id==='kf'){S.kf=t.checked;draw()}if(t.id==='csl'){S.csl=t.checked;draw()}});
+document.addEventListener('input',e=>{const t=e.target;if(t.dataset.f){S.sp[S.cur].rows[+t.dataset.r][t.dataset.f]=t.value;draw()}if(t.id==='nm'){S.sp[S.cur].n=t.value;$('#cps').querySelector('.on').textContent=t.value;draw()}if(t.id==='phics'){S.phics=t.value;draw()}});
+document.addEventListener('paste',e=>{const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const tx=e.clipboardData.getData('text');if(!/[\t\n]/.test(tx))return;e.preventDefault();
+ const F=['e','a','b','u'],rows=S.sp[S.cur].rows;tx.trim().split(/\r?\n/).forEach((ln,i)=>ln.split('\t').forEach((v,j)=>{const r=+t.dataset.r+i,c=+t.dataset.c+j;if(c>3)return;while(rows.length<=r)rows.push({e:'',a:'',b:'',u:''});rows[r][F[c]]=v.trim()}));renderTable();draw()});
+function svgStr(){const g=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();let s=new XMLSerializer().serializeToString($('#view svg')).replace(/var\(--(\w+)\)/g,(m,n)=>g('--'+n));
+ const css=`.gl{stroke:${g('--gr')};stroke-width:1}.ax{stroke:${g('--mu')};stroke-width:1.2}.tk{fill:${g('--mu')};font-size:11px}.al{fill:${g('--ink')};font-size:12.5px}text{font-family:sans-serif}`;
+ const lg=S.sp.map((p,i)=>`<rect x="${G.ml+10}" y="${G.mt+8+i*16}" width="10" height="10" rx="2" fill="${COL[i%6]}"/><text x="${G.ml+26}" y="${G.mt+17+i*16}" font-size="11" fill="${g('--ink')}">${p.n.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</text>`).join('');
+ return s.replace(/<svg([^>]*)>/,`<svg$1 width="760" height="500"><style>${css}</style><rect width="760" height="500" fill="${g('--pn')}"/>`).replace('</svg>',lg+'</svg>')}
+async function exp(png){try{const dl=await claude.use('downloads');if(!dl)return alert('Download indisponível neste ambiente.');const svg=svgStr();
+ if(!png)return await dl.save({filename:'grafico.svg',data:new Blob([svg],{type:'image/svg+xml'})});
+ const img=new Image();img.onload=()=>{const c=document.createElement('canvas');c.width=1520;c.height=1000;c.getContext('2d').drawImage(img,0,0,1520,1000);c.toBlob(b=>dl.save({filename:'grafico.png',data:b}).catch(()=>{}))};img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)}catch(e){}}
+const V=$('#view'),pos=(e,sv)=>{const b=sv.getBoundingClientRect();return[(e.clientX-b.left)*G.W/b.width,(e.clientY-b.top)*G.H/b.height,G.W/b.width]};
+V.addEventListener('wheel',e=>{const sv=e.target.closest('svg');if(!sv||!G)return;e.preventDefault();const[mx,my]=pos(e,sv),f=e.deltaY<0?1.2:1/1.2,dx=G.x0+(mx-G.ml)/G.kx,dy=G.y1-(my-G.mt)/G.ky,kx=G.kx*f,ky=G.ky*f,y1=dy+(my-G.mt)/ky;
+ S.z[S.tab]={x0:dx-(mx-G.ml)/kx,y0:y1-(G.H-G.mt-50)/ky,kx,ky};draw()},{passive:false});
+V.addEventListener('mousedown',e=>{const sv=e.target.closest('svg');if(sv&&G){drag={x:e.clientX,y:e.clientY,g:{...G},w:sv.getBoundingClientRect().width};V.style.cursor='grabbing'}});
+V.addEventListener('dblclick',()=>{S.z[S.tab]=null;draw()});
+document.addEventListener('mousemove',e=>{if(!drag)return;const q=drag.g,sc=q.W/drag.w;S.z[S.tab]={x0:q.x0-(e.clientX-drag.x)*sc/q.kx,y0:q.y0+(e.clientY-drag.y)*sc/q.ky,kx:q.kx,ky:q.ky};draw()});
+document.addEventListener('mouseup',()=>{drag=null;V.style.cursor=''});
+const tip=$('#tip');document.addEventListener('mousemove',e=>{const t=e.target.closest&&e.target.closest('[data-t]');if(t){tip.textContent=t.dataset.t;tip.style.display='block';tip.style.left=Math.min(e.clientX+14,innerWidth-230)+'px';tip.style.top=e.clientY+14+'px'}else tip.style.display='none'});
+load('CIU');
+</script></body></html>
