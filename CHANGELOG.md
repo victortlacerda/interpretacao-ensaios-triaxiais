@@ -4,6 +4,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Não lançado]
 
+### Adicionado
+- Capturas de tela do app em `docs/img/` e README com apresentação visual.
+
 ## [1.0.0] - 2026-11-03
 
 ### Adicionado
