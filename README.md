@@ -1,6 +1,6 @@
 # Interpretação de ensaios triaxiais
 
-App de engenharia geotécnica para **trajetórias de tensões (p, q)**, **linha K<sub>f</sub>**, **círculos de Mohr** e **resistência não drenada (Olson & Mattson, 2008)** a partir de resultados de ensaios triaxiais CIU, CID e UU.
+App de engenharia geotécnica para **trajetórias de tensões (p, q) nas convenções MIT e Cambridge**, **linha K<sub>f</sub>**, **círculos de Mohr** e **resistência não drenada (Olson & Mattson, 2008)** a partir de resultados de ensaios triaxiais CIU, CID e UU.
 
 É um único arquivo HTML: abra com duplo clique no navegador, sem instalar nada e sem internet.
 
@@ -12,6 +12,15 @@ App de engenharia geotécnica para **trajetórias de tensões (p, q)**, **linha 
 Tensões totais (tracejado) e efetivas (contínuo) no mesmo gráfico, ruptura marcada em cada corpo de prova, linha K<sub>f</sub> ajustada por regressão e φ′, c′ calculados na hora.
 
 ![Trajetória p-q](docs/img/01-trajetoria-ciu.png)
+
+### Convenção de Cambridge
+Um clique troca a trajetória para p = (σ₁ + 2σ₃)/3 e q = σ₁ − σ₃. A ruptura vira q = M·p′, com M de compressão e de extensão calculados a partir de φ′.
+
+![Trajetória em Cambridge](docs/img/06-cambridge-ciu.png)
+
+Na comparação dos exemplos fica visível a diferença entre compressão (M<sub>c</sub>) e extensão (M<sub>e</sub>):
+
+![Comparação em Cambridge](docs/img/07-cambridge-comparacao.png)
 
 ### Círculos de Mohr e envoltória de resistência
 Círculos na ruptura de cada corpo de prova, com a envoltória de Mohr-Coulomb e a linha de estado crítico.
@@ -35,6 +44,7 @@ Um clique plota compressão e extensão, axial e lateral, mais o CIU, partindo d
 
 ## Funcionalidades
 
+- **Convenção MIT (Lambe) ou Cambridge (Roscoe)** para a trajetória, com conversão automática dos dados da tabela.
 - **Tipos de ensaio:** CIU, CID e UU. No CIU há coluna de poropressão (u) e é possível ver tensões totais (TTT), efetivas (TTE) ou ambas.
 - **Entrada de dados:** informe σ₁ e σ₃ (o programa calcula p e q) ou informe p e q diretamente. Aceita vírgula decimal e colagem direta do Excel.
 - **Vários corpos de prova**, cada um com uma cor.
@@ -49,7 +59,7 @@ Um clique plota compressão e extensão, axial e lateral, mais o CIU, partindo d
 
 ## Fórmulas
 
-Para σ₂ = σ₃ (coordenadas de Lambe):
+Convenção MIT (Lambe), para σ₂ = σ₃:
 
 ```
 p  = (σ₁ + σ₃) / 2        p′ = p − u
@@ -60,6 +70,20 @@ Linha K<sub>f</sub> no plano p–q: `q = a + p·tan α`, com
 
 ```
 sen φ = tan α        c = a / cos φ
+```
+
+Convenção de Cambridge (Roscoe), com σ₁ = tensão axial e σ₃ = tensão radial:
+
+```
+p  = (σ₁ + 2σ₃) / 3       p′ = p − u
+q  = σ₁ − σ₃
+```
+
+Ruptura no plano p–q: `q = q₀ + M·p′`, com
+
+```
+compressão (q > 0):  M = 6 sen φ′ / (3 − sen φ′)    sen φ′ = 3M / (6 + M)
+extensão   (q < 0):  M = 6 sen φ′ / (3 + sen φ′)    sen φ′ = 3M / (6 − M)
 ```
 
 Resistência não drenada normalizada (Olson & Mattson, 2008):
@@ -77,6 +101,7 @@ Abra o `index.html` em qualquer navegador moderno. Para publicar online, ative o
 ## Observações
 
 - Unidades em kPa.
+- Os círculos de Mohr e a análise de Olson & Mattson usam sempre (σ₁ − σ₃)/2, independentemente da convenção escolhida.
 - Os exemplos prontos e as imagens acima usam dados sintéticos (φ′ = 32°), apenas para demonstração.
 - A ruptura é tomada como o ponto de q máximo de cada ensaio.
 - Ferramenta de apoio ao estudo; não substitui a análise de um engenheiro geotécnico.
