@@ -36,14 +36,15 @@ td{padding:2px}td input{width:100%;min-width:0;font:inherit;font-size:.88rem;pad
 input[type=text].sm{width:70px;font:inherit;padding:4px 6px;border:1px solid var(--ln);border-radius:6px;background:var(--bg);color:var(--ink)}
 </style><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='8'%20fill='%230b6e8a'/%3E%3Cpath%20fill='none'%20stroke='%23fff'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%20d='M5%2024h22M8%2024a4%204%200%200%201%208%200M12%2024a7%207%200%200%201%2014%200M5%2022.9L27%2012.4'/%3E%3C/svg%3E">
 </head><body>
-<header><h1>Trajetória de tensões em ensaios triaxiais</h1><p>Entre com os resultados dos ensaios e veja a trajetória (p, q) de Lambe, a linha K<sub>f</sub>, os círculos de Mohr e a análise de Olson &amp; Mattson (2008). Unidades em kPa.</p></header>
+<header><h1>Trajetória de tensões em ensaios triaxiais</h1><p>Entre com os resultados dos ensaios e veja a trajetória de tensões nas convenções MIT (Lambe) ou Cambridge, a linha K<sub>f</sub>, os círculos de Mohr e a análise de Olson &amp; Mattson (2008). Unidades em kPa.</p></header>
 <main>
 <aside>
  <div class="pn"><h2>Exemplos prontos (3 corpos de prova)</h2><div class="seg" id="ex"></div><p class="mu" style="margin:8px 0 0">Cada botão carrega um caso típico; “Plotar todos juntos” coloca os 5 caminhos no mesmo gráfico, partindo de σ₀ = 200 kPa (Kf desligada, pois os ensaios são de naturezas diferentes).</p></div>
  <div class="pn"><h2>Tipo de ensaio</h2><div class="seg" id="tipo"></div><p class="mu" id="tipoN" style="margin:8px 0 0"></p></div>
+ <div class="pn"><h2>Convenção da trajetória</h2><div class="seg" id="conv"></div><p class="mu" id="convN" style="margin:8px 0 0"></p></div>
  <div class="pn"><h2>Como você vai informar os dados?</h2><div class="seg" id="ent"></div></div>
  <div class="pn"><h2>Corpos de prova</h2><div class="seg" id="cps" style="margin-bottom:10px"></div><div style="overflow-x:auto"><table id="tb"></table></div>
-  <div class="seg" style="margin-top:8px"><button id="addr">+ Linha</button><button id="clr">Limpar tabela</button></div><p class="mu" style="margin:8px 0 0">Dica: cole direto do Excel (Ctrl+V) em qualquer célula. Aceita vírgula decimal.</p></div>
+  <div class="seg" style="margin-top:8px"><button id="addr">+ Linha</button><button id="clr">Limpar tabela</button></div><p class="mu" style="margin:8px 0 0">Dica: cole direto do Excel (Ctrl+V) em qualquer célula. Aceita vírgula decimal. Nos ensaios de extensão, use σ₁ (ax.) para a tensão axial e σ₃ (rad.) para a radial, mesmo que a axial seja a menor.</p></div>
 </aside>
 <section class="pn">
  <div class="tabs" id="tabs"></div>
@@ -54,8 +55,9 @@ input[type=text].sm{width:70px;font:inherit;padding:4px 6px;border:1px solid var
 <script>
 const $=s=>document.querySelector(s),COL=['#0b6e8a','#f08c00','#7c3aed','#15803d','#e0218a','#6b4423'];
 const D=Math.PI/180,num=v=>parseFloat(String(v).replace(',','.')),fmt=v=>Number.isFinite(v)?String(+v.toFixed(2)).replace('.',','):'–';
-let G=null,drag=null,S={z:{},yv:'q',tipo:'CIU',ent:'s13',vis:'ambas',tab:'path',cur:0,kf:true,csl:true,phics:'',sp:[]};
+let G=null,drag=null,S={z:{},yv:'q',tipo:'CIU',ent:'s13',vis:'ambas',tab:'path',conv:'mit',cur:0,kf:true,csl:true,phics:'',sp:[]};
 const EX={CIU:'CIU – compressão axial não drenada',AC:'Compressão axial (drenada)',AE:'Extensão axial (drenada)',LC:'Compressão lateral (drenada)',LE:'Extensão lateral (drenada)'};
+const CN={mit:'p = (σ₁ + σ₃)/2 e q = (σ₁ − σ₃)/2: centro e raio do círculo de Mohr. Ruptura: q = a + p′·tan α, com sen φ′ = tan α.',cam:'p = (σ₁ + 2σ₃)/3 e q = σ₁ − σ₃: tensão média e tensão desviadora (invariantes). Ruptura: q = M·p′, com M = 6 sen φ′/(3 − sen φ′) na compressão e 6 sen φ′/(3 + sen φ′) na extensão.'};
 const TN={CIU:'Adensado isotropicamente, cisalhado não drenado, com medida de poropressão (u). Permite TTT e TTE.',CID:'Adensado e cisalhado drenado: u = 0, tensões totais = efetivas.',UU:'Não adensado, não drenado: só tensões totais (φu e c<sub>u</sub>).'};
 function gen(k,s0,ph){const s=Math.sin(ph*D),rows=[];for(let i=0;i<=10;i++){const e=i*1.4,h=(1-Math.exp(-e/3))/(1-Math.exp(-14/3));let a,b,u=0;
  if(k==='AC'){const q=s0*s/(1-s)*h;a=s0+2*q;b=s0}
@@ -67,14 +69,17 @@ function gen(k,s0,ph){const s=Math.sin(ph*D),rows=[];for(let i=0;i<=10;i++){cons
 function load(k){S.tipo=k==='CIU'?'CIU':'CID';S.ent='s13';S.cur=0;S.phics='';S.z={};S.kf=true;S.csl=true;S.vis='ambas';S.sp=[100,200,300].map((s0,i)=>({n:'CP-'+(i+1)+' (σ₀ '+s0+')',rows:gen(k,s0,32)}));render()}
 function loadAll(){S.tipo='CIU';S.ent='s13';S.vis='ambas';S.cur=0;S.phics='';S.z={};S.tab='path';S.kf=false;S.csl=false;
  S.sp=Object.entries(EX).map(([k,t])=>({n:t.replace(' (drenada)','').replace('CIU – compressão axial não drenada','CIU (não drenada)'),rows:gen(k,200,32)}));render()}
-function calc(sp){return sp.rows.map(r=>({e:r.e,a:num(r.a),b:num(r.b),u:S.tipo==='CIU'?(num(r.u)||0):0})).filter(r=>isFinite(r.a)&&isFinite(r.b)).map(r=>{let s1,s3,p,q;if(S.ent==='s13'){s1=r.a;s3=r.b;p=(s1+s3)/2;q=(s1-s3)/2}else{p=r.a;q=r.b;s1=p+q;s3=p-q}return{e:r.e,u:r.u,p,q,pe:p-r.u,s1,s3,s1e:s1-r.u,s3e:s3-r.u}})}
+function calc(sp){return sp.rows.map(r=>({e:r.e,a:num(r.a),b:num(r.b),u:S.tipo==='CIU'?(num(r.u)||0):0})).filter(r=>isFinite(r.a)&&isFinite(r.b)).map(r=>{const[s1,s3]=S.ent==='s13'?[r.a,r.b]:toS(r.a,r.b,S.conv),u=r.u,p=(s1+s3)/2,q=(s1-s3)/2,pc=(s1+2*s3)/3;return{e:r.e,u,p,q,pe:p-u,s1,s3,s1e:s1-u,s3e:s3-u,pc,qc:s1-s3,pce:pc-u}})}
+const toS=(p,q,c)=>c==='cam'?[p+2*q/3,p-q/3]:[p+q,p-q],toPQ=(s1,s3,c)=>c==='cam'?[(s1+2*s3)/3,s1-s3]:[(s1+s3)/2,(s1-s3)/2];
 const kinds=()=>S.tipo==='CIU'?(S.vis==='ambas'?['t','e']:[S.vis==='total'?'t':'e']):S.tipo==='CID'?['e']:['t'];
 const kn=k=>k==='t'?(S.tipo==='UU'?'Tensões totais (TTT)':'Totais (TTT)'):(S.tipo==='CID'?'Efetivas = totais':'Efetivas (TTE)');
-const px=(r,k)=>k==='t'?r.p:r.pe;
-function fail(k){return S.sp.map(sp=>{const R=calc(sp);if(!R.length)return null;let m=R[0];R.forEach(r=>{if(Math.abs(r.q)>Math.abs(m.q))m=r});return{p:px(m,k),q:Math.abs(m.q),r:m}}).map((f,i)=>f&&{...f,i}).filter(Boolean)}
-function fit(P){const n=P.length;if(!n)return null;const o=()=>{const m=P[0].q/P[0].p;return{m,a:0,n,R2:NaN}};if(n===1)return Object.assign(o(),{ph:Math.asin(Math.min(P[0].q/P[0].p,.999))/D,c:0});
- const sx=P.reduce((s,p)=>s+p.p,0),sy=P.reduce((s,p)=>s+p.q,0),sxy=P.reduce((s,p)=>s+p.p*p.q,0),sxx=P.reduce((s,p)=>s+p.p*p.p,0),d=n*sxx-sx*sx;if(Math.abs(d)<1e-9)return Object.assign(o(),{ph:0,c:0});
- const m=(n*sxy-sx*sy)/d,a=(sy-m*sx)/n,my=sy/n,st=P.reduce((s,p)=>s+(p.q-my)**2,0),sr=P.reduce((s,p)=>s+(p.q-a-m*p.p)**2,0);const ph=Math.asin(Math.max(-.999,Math.min(.999,m)));return{m,a,n,R2:st?1-sr/st:1,ph:ph/D,c:a/Math.cos(ph)}}
+const PX=(r,k,c)=>c==='cam'?(k==='t'?r.pc:r.pce):(k==='t'?r.p:r.pe),QY=(r,c)=>c==='cam'?r.qc:r.q;
+const sinM=(M,sg)=>Math.max(0,Math.min(.999,sg>0?3*M/(6+M):3*M/(6-M))),Mof=(ph,sg,c)=>{const s=Math.sin(ph*D);return c!=='cam'?s:sg>0?6*s/(3-s):6*s/(3+s)};
+function fail(k,c){return S.sp.map((sp,i)=>{const R=calc(sp);if(!R.length)return null;let m=R[0];R.forEach(r=>{if(Math.abs(r.q)>Math.abs(m.q))m=r});const qq=QY(m,c);return{p:PX(m,k,c),q:Math.abs(qq),sg:qq<0?-1:1,r:m,i}}).filter(Boolean)}
+function fit(P,c){const n=P.length;if(!n)return null;const sg=P.reduce((s,p)=>s+p.sg,0)<0?-1:1;let m,a=0,R2=NaN;
+ const sx=P.reduce((s,p)=>s+p.p,0),sy=P.reduce((s,p)=>s+p.q,0),sxy=P.reduce((s,p)=>s+p.p*p.q,0),sxx=P.reduce((s,p)=>s+p.p*p.p,0),d=n*sxx-sx*sx;
+ if(n===1||Math.abs(d)<1e-9)m=P.reduce((s,p)=>s+p.q/p.p,0)/n;else{m=(n*sxy-sx*sy)/d;a=(sy-m*sx)/n;const my=sy/n,st=P.reduce((s,p)=>s+(p.q-my)**2,0),sr=P.reduce((s,p)=>s+(p.q-a-m*p.p)**2,0);R2=st?1-sr/st:1}
+ const sn=c==='cam'?sinM(m,sg):Math.max(-.999,Math.min(.999,m)),ph=Math.asin(sn),co=Math.cos(ph);return{m,a,n,R2,sg,ph:ph/D,c:c==='cam'?a*(sg>0?3-sn:3+sn)/(6*co):a/co}}
 function chart(pts,xl,yl,draw,eq){const W=760,H=500,ml=60,mr=18,mt=14,mb=50,pw=W-ml-mr,ph=H-mt-mb;
  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);let x0=Math.min(0,...xs),x1=Math.max(1,...xs),y0=Math.min(0,...ys),y1=Math.max(1,...ys);
  const dx=(x1-x0)*.06,dy=(y1-y0)*.08;x1+=dx;y1+=dy;if(y0<0)y0-=dy;if(x0<0)x0-=dx;
@@ -84,49 +89,54 @@ function chart(pts,xl,yl,draw,eq){const W=760,H=500,ml=60,mr=18,mt=14,mb=50,pw=W
  for(let i=Math.ceil(x0/sx);i*sx<=x1;i++){const v=i*sx;g+=`<line class="gl" x1="${X(v)}" x2="${X(v)}" y1="${mt}" y2="${H-mb}"/><text class="tk" x="${X(v)}" y="${H-mb+16}" text-anchor="middle">${+v.toFixed(6)}</text>`}
  for(let i=Math.ceil(y0/sy);i*sy<=y1;i++){const v=i*sy;g+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${Y(v)}" y2="${Y(v)}"/><text class="tk" x="${ml-6}" y="${Y(v)+4}" text-anchor="end">${+v.toFixed(6)}</text>`}
  return`<svg viewBox="0 0 ${W} ${H}" role="img"><clipPath id="cp"><rect x="${ml}" y="${mt}" width="${pw}" height="${ph}"/></clipPath>${g}<line class="ax" x1="${X(0)}" x2="${X(0)}" y1="${mt}" y2="${H-mb}"/><line class="ax" x1="${ml}" x2="${W-mr}" y1="${Y(0)}" y2="${Y(0)}"/><g clip-path="url(#cp)">${draw(X,Y,{xa:x0,xb:x1,ya:y0,yb:y1})}</g><text class="al" x="${ml+pw/2}" y="${H-8}" text-anchor="middle">${xl}</text><text class="al" transform="translate(15 ${mt+ph/2}) rotate(-90)" text-anchor="middle">${yl}</text></svg>`}
-const lbl=(x,y,t,c,a)=>`<text x="${x}" y="${y}" ${a?'text-anchor="'+a+'"':''} fill="${c}" font-size="12" font-weight="600" paint-order="stroke" stroke="var(--pn)" stroke-width="3">${t}</text>`;
-function cslPhi(){const v=num(S.phics);if(isFinite(v))return v;const f=fit(fail('e'));return f?f.ph:null}
-function dPath(){const K=kinds(),L=[];let pts=[];
- S.sp.forEach((sp,i)=>K.forEach(k=>calc(sp).forEach(r=>pts.push([px(r,k),r.q]))));
+const lbs=(X,B,x,y,t,c)=>lbl(X(x)-X(B.xa)<t.length*7+12?X(x)+6:X(x),y,t,c,X(x)-X(B.xa)<t.length*7+12?'start':'end'),lbl=(x,y,t,c,a)=>`<text x="${x}" y="${y}" ${a?'text-anchor="'+a+'"':''} fill="${c}" font-size="12" font-weight="600" paint-order="stroke" stroke="var(--pn)" stroke-width="3">${t}</text>`;
+function cslPhi(){const v=num(S.phics);if(isFinite(v))return v;const f=fit(fail('e','mit'),'mit');return f?f.ph:null}
+const sgs=(k,c)=>{const s=[...new Set(fail(k,c).map(f=>f.sg))];return s.length?s:[1]};
+const axl=(K,c)=>{const pn=K.length>1?'p, p′':K[0]==='e'&&S.tipo!=='CID'?'p′':'p';return[`${pn} = ${c==='cam'?'(σ₁ + 2σ₃)/3':'(σ₁ + σ₃)/2'}  (kPa)`,`q = ${c==='cam'?'σ₁ − σ₃':'(σ₁ − σ₃)/2'}  (kPa)`]};
+function dPath(){const K=kinds(),c=S.conv,cam=c==='cam';let pts=[];
+ S.sp.forEach(sp=>K.forEach(k=>calc(sp).forEach(r=>pts.push([PX(r,k,c),QY(r,c)]))));
  const xd=Math.max(...pts.map(p=>p[0]),1),LB=(B,o)=>Math.min(xd*1.03,B.xa+(B.xb-B.xa)*.92)-(o||0)*(B.xb-B.xa);
- const F={};K.forEach(k=>F[k]=fit(fail(k)));K.forEach(k=>fail(k).forEach(f=>pts.push([f.p,f.q])));
- const ps=cslPhi();if(S.csl&&K.includes('e')&&ps!=null)pts.push([Math.max(...pts.map(p=>p[0]))*.9,Math.max(...pts.map(p=>p[0]))*.9*Math.sin(ps*D)]);
- if(S.kf)K.forEach(k=>{const f=F[k];if(f){const xm=Math.max(...pts.map(p=>p[0]));pts.push([xm,f.a+f.m*xm])}});
- return chart(pts,K.length>1?'p, p′ (kPa)':K[0]==='t'?'p (kPa)':'p′ (kPa)','q (kPa)',(X,Y,B)=>{let s='';
-  if(S.kf)K.forEach(k=>{const f=F[k];if(!f)return;const c=k==='t'?'#64748b':'var(--ink)';s+=`<line x1="${X(0)}" y1="${Y(f.a)}" x2="${X(B.xb)}" y2="${Y(f.a+f.m*B.xb)}" stroke="${c}" stroke-width="2" stroke-dasharray="${k==='t'?'3 4':'0'}"/>`+lbl(X(LB(B)),Y(f.a+f.m*LB(B))-9,'Kf'+(k==='e'&&S.tipo!=='CID'?'′':''),c,'end')});
-  if(S.csl&&K.includes('e')&&ps!=null)s+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(B.xb)}" y2="${Y(B.xb*Math.sin(ps*D))}" stroke="#d97706" stroke-width="2" stroke-dasharray="9 4 2 4"/>`+lbl(X(LB(B,.16)),Y(LB(B,.16)*Math.sin(ps*D))-9,'LEC (φcs = '+fmt(ps)+'°)','#d97706','end');
-  S.sp.forEach((sp,i)=>K.forEach(k=>{const R=calc(sp);if(!R.length)return;const c=COL[i%6];
-   s+=`<polyline fill="none" stroke="${c}" stroke-width="2.2" ${k==='t'&&K.length>1?'stroke-dasharray="6 4"':''} points="${R.map(r=>X(px(r,k))+','+Y(r.q)).join(' ')}"/>`;
-   R.forEach((r,j)=>s+=`<circle cx="${X(px(r,k))}" cy="${Y(r.q)}" r="3.4" fill="${c}" data-t="${sp.n}\nε = ${r.e||'–'} %\np${k==='e'?'′':''} = ${fmt(px(r,k))}  q = ${fmt(r.q)}\nσ1${k==='e'?'′':''} = ${fmt(k==='e'?r.s1e:r.s1)}  σ3${k==='e'?'′':''} = ${fmt(k==='e'?r.s3e:r.s3)}\nu = ${fmt(r.u)}"/>`)}));
-  K.forEach(k=>fail(k).forEach(f=>s+=`<circle cx="${X(f.p)}" cy="${Y(Math.sign(f.r.q||1)*f.q)}" r="8" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`));return s})}
-function dMohr(){const K=kinds(),pts=[];K.forEach(k=>fail(k).forEach(f=>pts.push([f.p-f.q,0],[f.p+f.q,f.q])));if(!pts.length)return'';
- const xd=Math.max(...pts.map(p=>p[0]),1),LB=(B,o)=>Math.min(xd*1.03,B.xa+(B.xb-B.xa)*.92)-(o||0)*(B.xb-B.xa);const F={};K.forEach(k=>F[k]=fit(fail(k)));const ps=cslPhi();
+ const F={};K.forEach(k=>F[k]=fit(fail(k,c),c));const ps=cslPhi(),SG=sgs('e',c);
+ if(S.csl&&K.includes('e')&&ps!=null)SG.forEach(g=>pts.push([xd*.9,g*xd*.9*Mof(ps,g,c)]));
+ if(S.kf)K.forEach(k=>{const f=F[k];if(f)pts.push([xd,f.sg*(f.a+f.m*xd)])});
+ const[xl,yl]=axl(K,c);
+ return chart(pts,xl,yl,(X,Y,B)=>{let s='';
+  if(S.kf)K.forEach(k=>{const f=F[k];if(!f)return;const col=k==='t'?'#64748b':'var(--ink)',pr=k==='e'&&S.tipo!=='CID'?'′':'',y=x=>f.sg*(f.a+f.m*x);s+=`<line x1="${X(0)}" y1="${Y(y(0))}" x2="${X(B.xb)}" y2="${Y(y(B.xb))}" stroke="${col}" stroke-width="2" stroke-dasharray="${k==='t'?'3 4':'0'}"/>`+lbs(X,B,LB(B),Y(y(LB(B)))+(f.sg>0?-9:18),'Kf'+pr+(cam?' (M = '+fmt(f.m)+')':''),col)});
+  if(S.csl&&K.includes('e')&&ps!=null)SG.forEach(g=>{const M=Mof(ps,g,c),x2=LB(B,.2);s+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(B.xb)}" y2="${Y(g*B.xb*M)}" stroke="#d97706" stroke-width="2" stroke-dasharray="9 4 2 4"/>`+lbs(X,B,x2,Y(g*x2*M)+(g>0?-9:18),'LEC (φcs = '+fmt(ps)+'°'+(cam?', M'+(g>0?'c':'e')+' = '+fmt(M):'')+')','#d97706')});
+  S.sp.forEach((sp,i)=>K.forEach(k=>{const R=calc(sp);if(!R.length)return;const col=COL[i%6],pr=k==='e'?'′':'';
+   s+=`<polyline fill="none" stroke="${col}" stroke-width="2.2" ${k==='t'&&K.length>1?'stroke-dasharray="6 4"':''} points="${R.map(r=>X(PX(r,k,c))+','+Y(QY(r,c))).join(' ')}"/>`;
+   R.forEach(r=>s+=`<circle cx="${X(PX(r,k,c))}" cy="${Y(QY(r,c))}" r="3.4" fill="${col}" data-t="${sp.n}\nε = ${r.e||'–'} %\np${pr} = ${fmt(PX(r,k,c))}  q = ${fmt(QY(r,c))}  (${cam?'Cambridge':'MIT'})\nσ1${pr} = ${fmt(k==='e'?r.s1e:r.s1)}  σ3${pr} = ${fmt(k==='e'?r.s3e:r.s3)}\nu = ${fmt(r.u)}"/>`)}));
+  K.forEach(k=>fail(k,c).forEach(f=>s+=`<circle cx="${X(f.p)}" cy="${Y(f.sg*f.q)}" r="8" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`));return s})}
+function dMohr(){const K=kinds(),pts=[];K.forEach(k=>fail(k,'mit').forEach(f=>pts.push([f.p-f.q,0],[f.p+f.q,f.q])));if(!pts.length)return'';
+ const xd=Math.max(...pts.map(p=>p[0]),1),LB=(B,o)=>Math.min(xd*1.03,B.xa+(B.xb-B.xa)*.92)-(o||0)*(B.xb-B.xa);const F={};K.forEach(k=>F[k]=fit(fail(k,'mit'),'mit'));const ps=cslPhi();
  return chart(pts.concat(S.kf?K.map(k=>[0,F[k]?F[k].c:0]):[]),K.length>1?'σ, σ′ (kPa)':K[0]==='t'?'σ (kPa)':'σ′ (kPa)','τ (kPa)',(X,Y,B)=>{let s='';
-  K.forEach(k=>fail(k).forEach(f=>{const c=COL[f.i%6];s+=`<path d="M${X(f.p-f.q)} ${Y(0)} A${f.q*(X(1)-X(0))} ${f.q*(X(1)-X(0))} 0 0 1 ${X(f.p+f.q)} ${Y(0)}" fill="${c}22" stroke="${c}" stroke-width="2" ${k==='t'&&K.length>1?'stroke-dasharray="6 4"':''} data-t="${S.sp[f.i].n} (${k==='t'?'total':'efetiva'})\nσ1 = ${fmt(f.p+f.q)}  σ3 = ${fmt(f.p-f.q)}\nτmáx = ${fmt(f.q)}"/>`}));
+  K.forEach(k=>fail(k,'mit').forEach(f=>{const c=COL[f.i%6];s+=`<path d="M${X(f.p-f.q)} ${Y(0)} A${f.q*(X(1)-X(0))} ${f.q*(X(1)-X(0))} 0 0 1 ${X(f.p+f.q)} ${Y(0)}" fill="${c}22" stroke="${c}" stroke-width="2" ${k==='t'&&K.length>1?'stroke-dasharray="6 4"':''} data-t="${S.sp[f.i].n} (${k==='t'?'total':'efetiva'})\nσ1 = ${fmt(f.p+f.q)}  σ3 = ${fmt(f.p-f.q)}\nτmáx = ${fmt(f.q)}"/>`}));
   if(S.kf)K.forEach(k=>{const f=F[k];if(!f)return;const t=Math.tan(f.ph*D),c=k==='t'?'#64748b':'var(--ink)';s+=`<line x1="${X(0)}" y1="${Y(f.c)}" x2="${X(B.xb)}" y2="${Y(f.c+B.xb*t)}" stroke="${c}" stroke-width="2" stroke-dasharray="${k==='t'?'3 4':'0'}"/>`+lbl(X(LB(B)),Y(f.c+LB(B)*t)-9,'Envoltória MC ('+(k==='t'?'tot.':'ef.')+')',c,'end')});
   if(S.csl&&K.includes('e')&&ps!=null)s+=`<line x1="${X(0)}" y1="${Y(0)}" x2="${X(B.xb)}" y2="${Y(B.xb*Math.tan(ps*D))}" stroke="#d97706" stroke-width="2" stroke-dasharray="9 4 2 4"/>`+lbl(X(LB(B,.3)),Y(LB(B,.3)*Math.tan(ps*D))-9,'LEC','#d97706','end');return s})}
-function dEps(){const yu=S.yv==='u'&&S.tipo==='CIU',v=r=>yu?r.u:r.q,pts=[],ok=sp=>calc(sp).filter(r=>isFinite(num(r.e)));
+function dEps(){const c=S.conv,yu=S.yv==='u'&&S.tipo==='CIU',v=r=>yu?r.u:QY(r,c),pts=[],ok=sp=>calc(sp).filter(r=>isFinite(num(r.e)));
  S.sp.forEach(sp=>ok(sp).forEach(r=>pts.push([num(r.e),v(r)])));if(!pts.length)return'<p class="mu">Preencha a coluna ε (%) da tabela para ver a curva.</p>';
- return chart(pts,'ε axial (%)',yu?'u (kPa)':'q (kPa)',(X,Y)=>{let s='';S.sp.forEach((sp,i)=>{const R=ok(sp);if(!R.length)return;const c=COL[i%6];
-  s+=`<polyline fill="none" stroke="${c}" stroke-width="2.2" points="${R.map(r=>X(num(r.e))+','+Y(v(r))).join(' ')}"/>`;
-  R.forEach(r=>s+=`<circle cx="${X(num(r.e))}" cy="${Y(v(r))}" r="3.4" fill="${c}" data-t="${sp.n}\nε = ${r.e} %\nq = ${fmt(r.q)}  u = ${fmt(r.u)}\np${S.tipo==='CIU'?'′':''} = ${fmt(r.pe)}"/>`);
-  if(!yu){let m=R[0];R.forEach(r=>{if(Math.abs(r.q)>Math.abs(m.q))m=r});s+=`<circle cx="${X(num(m.e))}" cy="${Y(m.q)}" r="8" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`}});return s},false)}
+ return chart(pts,'ε axial (%)',yu?'u (kPa)':axl(['t'],c)[1],(X,Y)=>{let s='';S.sp.forEach((sp,i)=>{const R=ok(sp);if(!R.length)return;const col=COL[i%6];
+  s+=`<polyline fill="none" stroke="${col}" stroke-width="2.2" points="${R.map(r=>X(num(r.e))+','+Y(v(r))).join(' ')}"/>`;
+  R.forEach(r=>s+=`<circle cx="${X(num(r.e))}" cy="${Y(v(r))}" r="3.4" fill="${col}" data-t="${sp.n}\nε = ${r.e} %\nq = ${fmt(QY(r,c))}  u = ${fmt(r.u)}\np${S.tipo==='CIU'?'′':''} = ${fmt(PX(r,'e',c))}"/>`);
+  if(!yu){let m=R[0];R.forEach(r=>{if(Math.abs(r.q)>Math.abs(m.q))m=r});s+=`<circle cx="${X(num(m.e))}" cy="${Y(QY(m,c))}" r="8" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`}});return s},false)}
 function dOlson(){const rows=S.sp.map(sp=>{const R=calc(sp);if(!R.length)return null;const sc=R[0].s3e,su=Math.max(...R.map(r=>Math.abs(r.q))),sr=Math.abs(R[R.length-1].q);return{n:sp.n,sc,su,sr}}).filter(Boolean);
  const ok=S.tipo!=='CID',m=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:NaN;
  return`<div class="eq">S<sub>u</sub> / σ′<sub>v</sub> = (σ₁ − σ₃) / (2σ₃)</div><p class="mu" style="margin:0 0 8px">Resistência não drenada normalizada (Olson &amp; Mattson, 2008): <b>S<sub>u</sub></b> = q = (σ₁ − σ₃)/2 e σ₃ = tensão confinante efetiva de adensamento (σ′<sub>3c</sub> = σ₃ − u₀, tomada na primeira linha de cada ensaio).</p>
  ${ok?'':'<p class="note" style="color:#c2410c">Esta análise vale para ensaios não drenados (CIU ou UU). No CID a razão é apenas ilustrativa.</p>'}
  <div style="overflow-x:auto"><table class="ol"><tr><th>Corpo de prova</th><th>σ′₃c</th><th>S<sub>u</sub> (pico)</th><th>S<sub>u</sub>/σ′₃c</th><th>S<sub>u</sub> (fim)</th><th>S<sub>u</sub>/σ′₃c (fim)</th></tr>${rows.map(r=>`<tr><td>${r.n}</td><td>${fmt(r.sc)}</td><td>${fmt(r.su)}</td><td><b>${fmt(r.su/r.sc)}</b></td><td>${fmt(r.sr)}</td><td>${fmt(r.sr/r.sc)}</td></tr>`).join('')}<tr><td><b>Média</b></td><td></td><td></td><td><b>${fmt(m(rows.map(r=>r.su/r.sc)))}</b></td><td></td><td><b>${fmt(m(rows.map(r=>r.sr/r.sc)))}</b></td></tr></table></div>
  <p class="note">Valores em kPa. “Pico” é o maior q; “fim” é o q da última linha, útil para comparar o pico com a resistência em grandes deformações (susceptibilidade à perda de resistência). Se a razão for aproximadamente constante entre os ensaios, o solo segue comportamento normalizado (S<sub>u</sub> ∝ σ′<sub>v</sub>).</p>`}
-function cards(){if(S.tab==='olson'||S.tab==='eps')return'';const K=kinds();return K.map(k=>{const f=fit(fail(k));if(!f)return'';const u=S.tipo==='UU'?'u':'',pr=k==='e'&&S.tipo!=='CID'?'′':'';
- return`<div class="card"><b>Linha Kf — ${kn(k)}</b><br>q = a + p${pr}·tan α<br>α = ${fmt(Math.asin(Math.min(f.m,1))/D)}° · a = ${fmt(f.a)} kPa<br><b>φ${u}${pr} = ${fmt(f.ph)}° · c${u}${pr} = ${fmt(f.c)} kPa</b><br><span class="mu">sen φ = tan α · c = a / cos φ · ${f.n} CP${f.n===1?' (c = 0 assumido)':' · R² = '+fmt(f.R2)}</span></div>`}).join('')+(S.tab==='path'?`<div class="card"><b>Como ler</b><br><span class="mu">Toda TTT é reta no carregamento de σ₃ constante; a TTE só é reta no ensaio drenado (u = 0). No ensaio não drenado a TTE é curva. Círculo vazado = ponto de ruptura (q máx).</span></div>`:'')}
+function cards(){if(S.tab==='olson'||S.tab==='eps')return'';const K=kinds(),c=S.tab==='mohr'?'mit':S.conv;return K.map(k=>{const f=fit(fail(k,c),c);if(!f)return'';const u=S.tipo==='UU'?'u':'',pr=k==='e'&&S.tipo!=='CID'?'′':'',nn=`${f.n} CP${f.n===1?' (c = 0 assumido)':' · R² = '+fmt(f.R2)}`;
+ if(c==='cam')return`<div class="card"><b>Linha Kf — ${kn(k)}</b><br>q = q₀ + M·p${pr}<br>M = ${fmt(f.m)} · q₀ = ${fmt(f.a)} kPa<br><b>φ${u}${pr} = ${fmt(f.ph)}° · c${u}${pr} = ${fmt(f.c)} kPa</b><br><span class="mu">${f.sg>0?'Compressão: sen φ = 3M/(6 + M)':'Extensão: sen φ = 3M/(6 − M)'} · ${nn}<br>Com este φ: M<sub>c</sub> = ${fmt(Mof(f.ph,1,'cam'))} · M<sub>e</sub> = ${fmt(Mof(f.ph,-1,'cam'))}</span></div>`;
+ return`<div class="card"><b>Linha Kf — ${kn(k)}</b><br>q = a + p${pr}·tan α<br>α = ${fmt(Math.asin(Math.min(f.m,1))/D)}° · a = ${fmt(f.a)} kPa<br><b>φ${u}${pr} = ${fmt(f.ph)}° · c${u}${pr} = ${fmt(f.c)} kPa</b><br><span class="mu">sen φ = tan α · c = a / cos φ · ${nn}</span></div>`}).join('')+(S.tab==='path'?`<div class="card"><b>Como ler</b><br><span class="mu">${c==='cam'?'Cambridge: com σ₃ constante, a TTT de compressão axial sobe com inclinação dq/dp = 3. Na extensão a ruptura ocorre com M menor que na compressão, por isso as envoltórias não são simétricas.':'MIT: com σ₃ constante, a TTT sobe a 45°. Compressão e extensão rompem de forma simétrica (q = ±p′·sen φ′).'} Toda TTT é reta; a TTE só é reta no ensaio drenado (u = 0) e é curva no não drenado. Círculo vazado = ruptura (q máx).</span></div>`:'')}
 function toolsH(){const k=S.tipo==='CIU'&&S.tab!=='olson'&&S.tab!=='eps';return(k?`<span>Tensões:</span><div class="seg" id="vis">${[['ambas','Ambas'],['total','Totais'],['efetiva','Efetivas']].map(([v,t])=>`<label><input type="radio" name="vis" value="${v}" ${S.vis===v?'checked':''}><span>${t}</span></label>`).join('')}</div>`:'')+(S.tab==='eps'&&S.tipo==='CIU'?`<span>Eixo Y:</span><div class="seg">${[['q','q'],['u','u']].map(([v,t])=>`<label><input type="radio" name="yv" value="${v}" ${S.yv===v?'checked':''}><span>${t}</span></label>`).join('')}</div>`:'')+(S.tab==='olson'||S.tab==='eps'?'':`<label><input type="checkbox" id="kf" ${S.kf?'checked':''}>Linha K<sub>f</sub> / envoltória</label><label><input type="checkbox" id="csl" ${S.csl?'checked':''}>Estado crítico</label><label>φ<sub>cs</sub> (°) <input class="sm" type="text" inputmode="decimal" id="phics" placeholder="auto" value="${S.phics}"></label>`)+(S.tab==='olson'?'':`<span class="seg"><button id="rz">Resetar zoom</button><button id="xpng">Baixar PNG</button><button id="xsvg">Baixar SVG</button></span>`)}
 function renderTabs(){$('#tabs').innerHTML=[['path','Trajetória (p, q)'],['mohr','Círculos de Mohr'],['eps','Curva ε × q'],['olson','Olson & Mattson']].map(([v,t])=>`<button data-tab="${v}" class="${S.tab===v?'on':''}">${t}</button>`).join('');
  $('#ex').innerHTML=Object.entries(EX).map(([k,t])=>`<button data-ex="${k}">${t}</button>`).join('')+'<button id="cmp" class="on" style="flex-basis:100%">Plotar todos juntos (comparar)</button>';
+ $('#conv').innerHTML=[['mit','MIT (Lambe)'],['cam','Cambridge (Roscoe)']].map(([v,t])=>`<label><input type="radio" name="cv" value="${v}" ${S.conv===v?'checked':''}><span>${t}</span></label>`).join('');$('#convN').innerHTML=CN[S.conv];
  $('#tipo').innerHTML=['CIU','CID','UU'].map(t=>`<label><input type="radio" name="tp" value="${t}" ${S.tipo===t?'checked':''}><span>${t}</span></label>`).join('');$('#tipoN').innerHTML=TN[S.tipo];
- $('#ent').innerHTML=[['s13','σ₁ e σ₃ (calcula p e q)'],['pq','p e q direto']].map(([v,t])=>`<label><input type="radio" name="en" value="${v}" ${S.ent===v?'checked':''}><span>${t}</span></label>`).join('');
+ $('#ent').innerHTML=[['s13','σ₁ e σ₃ (calcula p e q)'],['pq','p e q direto (na convenção escolhida)']].map(([v,t])=>`<label><input type="radio" name="en" value="${v}" ${S.ent===v?'checked':''}><span>${t}</span></label>`).join('');
  $('#cps').innerHTML=S.sp.map((s,i)=>`<button data-cp="${i}" class="${S.cur===i?'on':''}" style="border-left:5px solid ${COL[i%6]}">${s.n}</button>`).join('')+'<button id="addcp">+ CP</button>'+(S.sp.length>1?'<button id="delcp">Remover</button>':'');
  $('#tools').innerHTML=toolsH()}
-function renderTable(){const sp=S.sp[S.cur],h=S.ent==='s13'?['σ₁','σ₃']:['p','q'],cu=S.tipo==='CIU';
+function renderTable(){const sp=S.sp[S.cur],h=S.ent==='s13'?['σ₁ (ax.)','σ₃ (rad.)']:['p','q'],cu=S.tipo==='CIU';
  $('#tb').innerHTML=`<tr><th colspan="${cu?5:4}"><input class="sm" style="width:100%" id="nm" value="${sp.n}" aria-label="Nome do corpo de prova"></th></tr><tr><th>ε (%)</th><th>${h[0]}</th><th>${h[1]}</th>${cu?'<th>u</th>':''}<th></th></tr>`+sp.rows.map((r,i)=>`<tr>${['e','a','b'].concat(cu?['u']:[]).map((f,c)=>`<td><input type="text" inputmode="decimal" data-r="${i}" data-f="${f}" data-c="${c}" value="${r[f]??''}"></td>`).join('')}<td><button class="x" data-del="${i}" aria-label="Remover linha">×</button></td></tr>`).join('')}
 function draw(){$('#view').innerHTML=S.tab==='path'?dPath():S.tab==='mohr'?dMohr():S.tab==='eps'?dEps():dOlson();$('#cards').innerHTML=cards();
  $('#view').insertAdjacentHTML('beforeend',S.tab!=='olson'?`<div class="lg">${S.tab==='eps'?'<span>círculo vazado = q máx · roda do mouse = zoom · arraste = mover</span>':'<span>roda do mouse = zoom · arraste = mover · duplo clique = resetar</span>'}${S.sp.map((s,i)=>`<span><i style="background:${COL[i%6]}"></i>${s.n}</span>`).join('')}${S.tipo==='CIU'&&S.vis==='ambas'?'<span>tracejado = totais · contínuo = efetivas</span>':''}</div>`:'')}
@@ -141,7 +151,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
  if(t.id==='clr'){S.sp[S.cur].rows=[{e:'',a:'',b:'',u:''}];renderTable();draw()}
  if(t.id==='addcp'){S.sp.push({n:'CP-'+(S.sp.length+1),rows:[{e:'',a:'',b:'',u:''}]});S.cur=S.sp.length-1;render()}
  if(t.id==='delcp'){S.sp.splice(S.cur,1);S.cur=0;render()}});
-document.addEventListener('change',e=>{const t=e.target;if(t.name==='tp'){S.tipo=t.value;render()}if(t.name==='en'){S.ent=t.value;render()}if(t.name==='yv'){S.yv=t.value;S.z.eps=null;renderTabs();draw()}if(t.name==='vis'){S.vis=t.value;renderTabs();draw()}
+document.addEventListener('change',e=>{const t=e.target;if(t.name==='tp'){S.tipo=t.value;render()}if(t.name==='cv'){const o=S.conv,n=t.value;if(S.ent==='pq')S.sp.forEach(sp=>sp.rows.forEach(r=>{const a=num(r.a),b=num(r.b);if(isFinite(a)&&isFinite(b)){const[s1,s3]=toS(a,b,o),[pp,qq]=toPQ(s1,s3,n);r.a=String(+pp.toFixed(2));r.b=String(+qq.toFixed(2))}}));S.conv=n;S.z={};render()}if(t.name==='en'){const n=t.value;if(n!==S.ent)S.sp.forEach(sp=>sp.rows.forEach(r=>{const a=num(r.a),b=num(r.b);if(isFinite(a)&&isFinite(b)){const[x,y]=n==='pq'?toPQ(a,b,S.conv):toS(a,b,S.conv);r.a=String(+x.toFixed(2));r.b=String(+y.toFixed(2))}}));S.ent=n;render()}if(t.name==='yv'){S.yv=t.value;S.z.eps=null;renderTabs();draw()}if(t.name==='vis'){S.vis=t.value;renderTabs();draw()}
  if(t.id==='kf'){S.kf=t.checked;draw()}if(t.id==='csl'){S.csl=t.checked;draw()}});
 document.addEventListener('input',e=>{const t=e.target;if(t.dataset.f){S.sp[S.cur].rows[+t.dataset.r][t.dataset.f]=t.value;draw()}if(t.id==='nm'){S.sp[S.cur].n=t.value;$('#cps').querySelector('.on').textContent=t.value;draw()}if(t.id==='phics'){S.phics=t.value;draw()}});
 document.addEventListener('paste',e=>{const t=e.target;if(!t.dataset||t.dataset.r===undefined)return;const tx=e.clipboardData.getData('text');if(!/[\t\n]/.test(tx))return;e.preventDefault();
